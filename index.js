@@ -11,8 +11,9 @@ const port = process.env.PORT || 3000;
 
 const username = process.env.MONGODB_USERNAME || "";
 const password = process.env.MONGODB_PASSWORD || "";
+const dbname = process.env.MONGODB_DBNAME || "";
 
-mongoose.connect(`mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/registrationFormDB`);
+mongoose.connect(`mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/${dbname}`);
 
 // registration schema
 const registrationSchema = new mongoose.Schema({
@@ -25,7 +26,7 @@ const registrationSchema = new mongoose.Schema({
 const Registration = mongoose.model("Registration", registrationSchema);
 
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json()); 
+app.use(bodyParser.json());
 // Middlelware for serving static files
 app.use(express.static(path.join(__dirname, 'public')));
 
