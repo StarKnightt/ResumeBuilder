@@ -194,6 +194,10 @@ a {
     font-size: 15px;
 }
 
+.fs-15 a {
+    color: white;
+}
+
 .fs-16 {
     font-size: 16px;
 }
