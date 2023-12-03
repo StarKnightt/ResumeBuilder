@@ -215,37 +215,6 @@ const generateCV = () => {
     let userData = getUserInputs();
     displayCV(userData);
     console.log(userData);
-    
-function generateCV() {
-    let userData = getUserInputs();
-    displayCV(userData);
-    console.log(userData);
-}
-
-// New function to handle changes in the "Present" checkbox
-function handlePresentCheckbox() {
-    generateCV(); // Update the preview when the checkbox state changes
-}
-
-// Inside the validateFormData function, consider the "Present" option
-function validateFormData(elem, elemType, elemName) {
-    // ... existing code ...
-
-    // Checking for the "Present" checkbox
-    if (elemType == validType.ANY && elem.id === "presentCheckbox") {
-        // Do something specific for the "Present" checkbox
-        // For example, you might want to disable the end date input when "Present" is checked
-        // You can customize this based on your specific requirements
-        if (elem.checked) {
-            // Handle the case when "Present" is checked
-            document.getElementById("exp_end_date").disabled = true;
-        } else {
-            // Handle the case when "Present" is unchecked
-            document.getElementById("exp_end_date").disabled = false;
-        }
-    }
-}
-
 }
 
 // function to preview an image, previewImage function uses FileReader (File API) to show a preview of the selected image
