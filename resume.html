@@ -172,6 +172,7 @@
                                             </div>
                                         </div>
 
+
                                         <div class="cols-3">
                                             <div class="form-elem">
                                                 <label for="" class="form-label">Start Date</label>
@@ -181,10 +182,16 @@
                                             </div>
                                             <div class="form-elem">
                                                 <label for="" class="form-label">End Date</label>
-                                                <input name="exp_end_date" type="date" class="form-control exp_end_date"
-                                                    id="" onkeyup="generateCV()">
+                                                <div>
+                                                    <input name="exp_end_date" type="date"
+                                                        class="form-control exp_end_date" id="" onkeyup="generateCV()">
+                                                    <input type="checkbox" id="presentCheckbox"
+                                                        onchange="handlePresentCheckbox()"> 
+                                                    <label for="presentCheckbox">Present</label>
+                                                </div>
                                                 <span class="form-text"></span>
                                             </div>
+
                                             <div class="form-elem">
                                                 <label for="" class="form-label">Description</label>
                                                 <input name="exp_description" type="text"
