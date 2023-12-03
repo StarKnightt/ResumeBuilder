@@ -211,6 +211,11 @@ const displayCV = (userData) => {
 }
 
 // function to generate CV
+const generateCV = () => {
+    let userData = getUserInputs();
+    displayCV(userData);
+    console.log(userData);
+    
 function generateCV() {
     let userData = getUserInputs();
     displayCV(userData);
@@ -239,6 +244,8 @@ function validateFormData(elem, elemType, elemName) {
             document.getElementById("exp_end_date").disabled = false;
         }
     }
+}
+
 }
 
 // function to preview an image, previewImage function uses FileReader (File API) to show a preview of the selected image
