@@ -24,12 +24,10 @@ const registrationSchema = new mongoose.Schema({
 
 // model of registration schema
 const Registration = mongoose.model("Registration", registrationSchema);
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 // Middlelware for serving static files
 app.use(express.static(path.join(__dirname, 'public')));
-
 app.get("/", (req, res) => {
     res.sendFile(__dirname + "/index.html");
 });
