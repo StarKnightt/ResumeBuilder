@@ -3,6 +3,8 @@ This repository hosts a versatile and interactive Dynamic CV Builder, complete w
 
 ## DEMO : https://resume-builder-ten-opal.vercel.app/
 
+![Resume Builder](preview.gif)
+
 ## Overview 
 
 This repository contains a dynamic CV builder implemented with HTML, CSS, and JavaScript. The CV builder incorporates advanced features like form validation, a dynamic form repeater, and real-time CV preview to streamline the process of creating professional resumes.
