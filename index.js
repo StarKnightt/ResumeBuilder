@@ -19,7 +19,8 @@ mongoose.connect(`mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb
 const registrationSchema = new mongoose.Schema({
     name: String,
     email: String,
-    password: String
+    password: String,
+    number: String
 });
 
 // model of registration schema
@@ -38,7 +39,7 @@ app.get("/registerPage", (req, res) => {
 
 app.post("/register", async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password,number } = req.body;
 
         const existingUser = await Registration.findOne({ email });
 
@@ -47,7 +48,8 @@ app.post("/register", async (req, res) => {
             const registrationData = new Registration({
                 name,
                 email,
-                password
+                password,
+                number
             });
             await registrationData.save();
             return res.redirect("/success");
