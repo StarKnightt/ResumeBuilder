@@ -9,9 +9,9 @@ dotenv.config();
 
 const port = process.env.PORT || 3000;
 
-const username = process.env.MONGODB_USERNAME || "";
-const password = process.env.MONGODB_PASSWORD || "";
-const dbname = process.env.MONGODB_DBNAME || "";
+const username = process.env.MONGODB_USERNAME || "username";
+const password = process.env.MONGODB_PASSWORD || "password";
+const dbname = process.env.MONGODB_DBNAME || "dbname";
 
 mongoose.connect(`mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/${dbname}`);
 
