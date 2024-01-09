@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
@@ -8,13 +9,11 @@ const app = express();
 dotenv.config();
 
 const port = process.env.PORT || 3000;
+const username = process.env.MONGODB_USERNAME || process.env.SECRET_NAME;
+const password = process.env.MONGODB_PASSWORD || process.env.SECRET;
+const dbname = process.env.MONGODB_DBNAME || process.env.SECRET_KEY;
 
-const username = process.env.MONGODB_USERNAME || "username";
-const password = process.env.MONGODB_PASSWORD || "password";
-const dbname = process.env.MONGODB_DBNAME || "dbname";
-
-mongoose.connect(`mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/${dbname}`);
-
+mongoose.connect(`mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/?retryWrites=true&w=majority`)
 // registration schema
 const registrationSchema = new mongoose.Schema({
     name: String,
