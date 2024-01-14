@@ -353,6 +353,8 @@ a {
 
 /* navbar part */
 .navbar {
+    position: sticky;
+    top: 0;
     height: 80px;
     display: flex;
     align-items: center;
