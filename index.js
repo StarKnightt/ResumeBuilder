@@ -55,7 +55,7 @@ app.get("/registerPage", (req, res) => {
 
 // Login Page route
 app.get("/LoginPage", (req, res) => {
-    res.sendFile(__dirname + "/pages/Login.html");
+    res.sendFile(__dirname + "/pages/login.html");
 });
 
 // Registration endpoint
