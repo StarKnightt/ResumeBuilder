@@ -89,7 +89,6 @@ app.post("/register", async (req, res) => {
     return res.redirect("/error");
   }
 });
-
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
