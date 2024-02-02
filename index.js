@@ -105,7 +105,6 @@ app.post("/login", async (req, res) => {
     }
 });
 
-
 // Success page route
 app.get("/success", (req, res) => {
     res.sendFile(__dirname + "/pages/success.html");
