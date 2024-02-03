@@ -1,6 +1,3 @@
-// Load environment variables from a .env file
-require("dotenv").config();
-
 // Import required libraries/modules
 const express = require("express");
 const mongoose = require("mongoose");
@@ -16,13 +13,13 @@ dotenv.config(); // Load environment variables again (repeated)
 const port = process.env.PORT || 3000;
 
 // Retrieve MongoDB connection details from environment variables
-const username = process.env.MONGODB_USERNAME || process.env.SECRET_NAME;
-const password = process.env.MONGODB_PASSWORD || process.env.SECRET;
-const dbname = process.env.MONGODB_DBNAME || process.env.SECRET_KEY;
+const username = process.env.MONGODB_USERNAME || "";
+const password = process.env.MONGODB_PASSWORD || "";
+const dbname = process.env.MONGODB_DBNAME || "";
 
 // Connect to MongoDB using mongoose
 mongoose.connect(
-  `mongodb+srv://prasenjitt4e:N0QLJsk5MVYYBuQ9@cluster0.j4relx6.mongodb.net/registrationFormDB?retryWrites=true&w=majority`
+  `mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/${dbname}?retryWrites=true&w=majority`
 );
 
 // Define the schema for user registration
