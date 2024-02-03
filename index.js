@@ -24,7 +24,6 @@ const dbname = process.env.MONGODB_DBNAME || process.env.SECRET_KEY;
 mongoose.connect(
   `mongodb+srv://prasenjitt4e:N0QLJsk5MVYYBuQ9@cluster0.j4relx6.mongodb.net/registrationFormDB?retryWrites=true&w=majority`
 );
-
 // Define the schema for user registration
 const registrationSchema = new mongoose.Schema({
   name: String,
@@ -44,7 +43,6 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 // Define routes
-
 // Home page route
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
@@ -77,7 +75,7 @@ app.post("/register", async (req, res) => {
         number,
       });
       await registrationData.save();
-      console.log("Reg successful");
+      console.log("Regstration successful");
       return res.redirect("/success");
     } else {
       // If user already exists, redirect to an error page
