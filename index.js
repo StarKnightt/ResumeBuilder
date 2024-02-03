@@ -17,6 +17,13 @@ const username = process.env.MONGODB_USERNAME || "";
 const password = process.env.MONGODB_PASSWORD || "";
 const dbname = process.env.MONGODB_DBNAME || "";
 
+// console.log('-----------------------------------------------------------------')
+// console.log("Username:", username);
+// console.log("Password:", password);
+// console.log("Database:", dbname);
+// console.log('-----------------------------------------------------------------')
+
+
 // Connect to MongoDB using mongoose
 mongoose.connect(
   `mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/${dbname}?retryWrites=true&w=majority`
