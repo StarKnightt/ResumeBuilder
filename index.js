@@ -22,7 +22,7 @@ const dbname = process.env.MONGODB_DBNAME || process.env.SECRET_KEY;
 
 // Connect to MongoDB using mongoose
 mongoose.connect(
-  `mongodb+srv://${"prasenjitt4e"}:${"N0QLJsk5MVYYBuQ9"}@cluster0.j4relx6.mongodb.net/?retryWrites=true&w=majority`
+  `mongodb+srv://prasenjitt4e:N0QLJsk5MVYYBuQ9@cluster0.j4relx6.mongodb.net/registrationFormDB?retryWrites=true&w=majority`
 );
 
 // Define the schema for user registration
