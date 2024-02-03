@@ -77,6 +77,7 @@ app.post("/register", async (req, res) => {
         number,
       });
       await registrationData.save();
+      console.log("Reg successful");
       return res.redirect("/success");
     } else {
       // If user already exists, redirect to an error page
