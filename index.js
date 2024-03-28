@@ -86,6 +86,7 @@ app.post("/register", async (req, res) => {
       console.log("User already exists");
       return res.redirect("/error");
     }
+    
   } catch (error) {
     // Handle any errors during registration
     console.log(error);
