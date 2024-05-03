@@ -2,33 +2,19 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
-  <link rel="shortcut icon" href="https://th.bing.com/th/id/OIP.kwE8IapDUTtylieeRnn2YAHaHa?pid=ImgDet&rs=1"
-    type="image/x-icon" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
-    integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous" />
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registration form</title>
-</head>
-
-<body class="background-radial-gradient">
+  <link rel="stylesheet" href="style.css">
+  <link rel="shortcut icon" href="https://th.bing.com/th/id/OIP.kwE8IapDUTtylieeRnn2YAHaHa?pid=ImgDet&rs=1"
+    type="image/x-icon">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+    integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
   <style>
     .background-radial-gradient {
       background-color: hsl(219, 43%, 17%);
-      background-image: radial-gradient(650px circle at 0% 0%,
-          hsl(218, 41%, 35%) 15%,
-          hsl(218, 41%, 30%) 35%,
-          hsl(218, 41%, 20%) 75%,
-          hsl(218, 41%, 19%) 80%,
-          transparent 100%),
-        radial-gradient(1250px circle at 100% 100%,
-          hsl(218, 41%, 45%) 15%,
-          hsl(218, 41%, 30%) 35%,
-          hsl(218, 41%, 20%) 75%,
-          hsl(218, 41%, 19%) 80%,
-          transparent 100%);
+      background-image: radial-gradient(650px circle at 0% 0%, hsl(218, 41%, 35%) 15%, hsl(218, 41%, 30%) 35%, hsl(218, 41%, 20%) 75%, hsl(218, 41%, 19%) 80%, transparent 100%), radial-gradient(1250px circle at 100% 100%, hsl(218, 41%, 45%) 15%, hsl(218, 41%, 30%) 35%, hsl(218, 41%, 20%) 75%, hsl(218, 41%, 19%) 80%, transparent 100%);
     }
 
     #radius-shape-1 {
@@ -127,7 +113,9 @@
       }
     }
   </style>
+</head>
 
+<body class="background-radial-gradient">
   <section class="text-center">
     <div id="radius-shape-1" class="position-absolute rounded-circle shadow-5-strong"></div>
     <div id="radius-shape-2" class="position-absolute shadow-5-strong"></div>
@@ -142,19 +130,22 @@
 
           <div class="form-outline mb-4">
             <label class="form-label" for="form3Example3">Email address</label>
-            <input type="email" id="form3Example3" name="email" class="form-control"
-              placeholder="Enter your email address" />
+            <input type="email" id="form3Example3" name="email" class="form-control" placeholder="Enter your email address" />
           </div>
           <div class="form-outline mb-4">
             <label class="form-label" for="form3Example3">Phone Number</label>
-            <input type="tel" id="form3Example3" name="number" maxlength="10" class="form-control"
-              placeholder="Enter your phone number" />
+            <input type="tel" id="form3Example3" name="number" maxlength="10" class="form-control" placeholder="Enter your phone number" />
           </div>
 
           <div class="form-outline mb-4">
             <label class="form-label" for="form3Example4">Password</label>
-            <input type="password" id="form3Example4" name="password" class="form-control"
-              placeholder="Enter a strong password" />
+            <div class="input-group">
+              <input type="password" id="form3Example4" name="password" class="form-control" placeholder="Enter a strong password" />
+              <div class="input-group-text">
+                <input type="checkbox" id="password-toggle">
+                <label class="form-check-label" for="password-toggle">Show Password</label>
+              </div>
+            </div>
           </div>
 
           <button type="submit" class="btn btn-primary btn-block mb-4">
@@ -165,10 +156,24 @@
         <div class="text-center">
           <p>Already have an account? <a href="/loginPage">Login</a></p>
         </div>
-        </form>
       </div>
     </div>
   </section>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const passwordInput = document.getElementById("form3Example4");
+      const passwordToggle = document.getElementById("password-toggle");
+
+      passwordToggle.addEventListener("change", function () {
+        if (passwordToggle.checked) {
+          passwordInput.type = "text";
+        } else {
+          passwordInput.type = "password";
+        }
+      });
+    });
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"
     integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V"
