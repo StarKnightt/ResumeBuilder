@@ -91,6 +91,8 @@
                   <div class="form-outline mb-4">
                     <label class="form-label" for="form3Example4">Password</label>
                     <input type="password" name="password" id="form3Example4" class="form-control" />
+                    <input type="checkbox" id="password-toggle">
+                    <label for="password-toggle">Show Password</label>
                   </div>
 
 
@@ -113,6 +115,21 @@
     </section>
     <!-- Section: Design Block -->
   </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const passwordInput = document.getElementById("form3Example4");
+      const passwordToggle = document.getElementById("password-toggle");
+
+      passwordToggle.addEventListener("change", function () {
+        if (passwordToggle.checked) {
+          passwordInput.type = "text";
+        } else {
+          passwordInput.type = "password";
+        }
+      });
+    });
+  </script>
 
 
   <!-- JavaScript Bundle with Popper -->
