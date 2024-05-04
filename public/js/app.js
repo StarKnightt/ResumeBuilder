@@ -291,7 +291,7 @@ function validateFormData(elem, elemType, elemName) {
       addErrMsg(elem, elemName);
     else removeErrMsg(elem);
   }
-
+  
   // checking for only empty
   if (elemType == validType.ANY) {
     if (elem.value.trim().length == 0) addErrMsg(elem, elemName);
