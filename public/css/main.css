@@ -583,7 +583,7 @@ a {
         grid-template-columns: repeat(2, 1fr);
         column-gap: 3rem;
     }
-
+    
     .section-one-r {
         text-align: left;
     }
