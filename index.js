@@ -5,6 +5,7 @@ const dotenv = require("dotenv");
 const path = require("path");
 const bcrypt = require("bcrypt"); // Add this package for password hashing
 const session = require("express-session"); // Add this package for session management
+const MongoStore = require('connect-mongo'); // Add this line
 const cors = require('cors'); // Add CORS package
 
 // Create an instance of Express
@@ -14,11 +15,19 @@ dotenv.config();
 // Define the port where the server will listen
 const port = process.env.PORT || 3000;
 
-// Session configuration
+// Updated Session configuration with MongoStore
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.j4relx6.mongodb.net/${process.env.MONGODB_DBNAME}?retryWrites=true&w=majority`,
+    ttl: 24 * 60 * 60, // Session TTL (1 day)
+    autoRemove: 'native', // Enable automatic removal of expired sessions
+    crypto: {
+      secret: process.env.SESSION_SECRET
+    }
+  }),
   cookie: { 
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
