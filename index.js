@@ -5,7 +5,6 @@ const dotenv = require("dotenv");
 const path = require("path");
 const bcrypt = require("bcrypt"); // Add this package for password hashing
 const session = require("express-session"); // Add this package for session management
-const MongoStore = require('connect-mongo'); // Add this line
 const cors = require('cors'); // Add CORS package
 
 // Create an instance of Express
@@ -26,11 +25,46 @@ const dbname = process.env.MONGODB_DBNAME || "";
 // console.log("Database:", dbname);
 // console.log('-----------------------------------------------------------------')
 
+// Simplified session config for Vercel deployment
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'fallback-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'none',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
 
-// Connect to MongoDB using mongoose
-mongoose.connect(
-  `mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/${dbname}?retryWrites=true&w=majority`
-);
+// CORS configuration for Vercel
+app.use(cors({
+  origin: true, // Allows all origins
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Add request logging for debugging
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
+// MongoDB connection with simplified error handling
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI || 
+      `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.j4relx6.mongodb.net/${process.env.MONGODB_DBNAME}?retryWrites=true&w=majority`);
+    console.log("MongoDB connected successfully");
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    return false;
+  }
+  return true;
+};
+
 // Define the schema for user registration
 const registrationSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -167,7 +201,29 @@ app.get("/all-styles", (req, res) => {
   res.sendFile(__dirname + "/public/css/main.css");
 });
 
-// Start the server and listen on the specified port
-app.listen(port, () => {
-  console.log(`Server is running http://localhost:${port}`);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ 
+    error: 'Internal Server Error',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
 });
+
+// Vercel deployment handler
+const handler = async (req, res) => {
+  if (!mongoose.connection.readyState) {
+    await connectDB();
+  }
+  return app(req, res);
+};
+
+// Export for Vercel
+module.exports = handler;
+
+// Start server only in development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+  });
+}
