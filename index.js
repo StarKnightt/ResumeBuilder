@@ -16,6 +16,17 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.static('public'));
 
+// Add error handling for static files
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 's-maxage=1, stale-while-revalidate');
+  next();
+});
+
+// Handle favicon.ico requests
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end(); // No content response for favicon
+});
+
 // Simplified session setup without connect-mongo
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback-secret',
@@ -183,14 +194,16 @@ app.get("/all-styles", (req, res) => {
   res.sendFile(__dirname + "/public/css/main.css");
 });
 
-// Vercel serverless handler
-const handler = async (req, res) => {
+// Modified handler for Vercel
+const handler = (req, res) => {
   try {
-    await connectDB();
-    app(req, res);
+    return app(req, res);
   } catch (error) {
     console.error('Handler error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ 
+      error: 'Internal Server Error',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
