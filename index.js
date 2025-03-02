@@ -1,52 +1,119 @@
-// Import required libraries/modules
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const path = require("path");
+const bcrypt = require("bcrypt"); // Add this package for password hashing
+const session = require("express-session"); // Add this package for session management
+const cors = require('cors'); // Add CORS package
 
 // Create an instance of Express
 const app = express();
-dotenv.config(); // Load environment variables again (repeated)
+dotenv.config();
 
 // Define the port where the server will listen
 const port = process.env.PORT || 3000;
 
-// Retrieve MongoDB connection details from environment variables
-const username = process.env.MONGODB_USERNAME || "";
-const password = process.env.MONGODB_PASSWORD || "";
-const dbname = process.env.MONGODB_DBNAME || "";
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  },
+  name: 'sessionId' // Change default session cookie name
+}));
 
-// console.log('-----------------------------------------------------------------')
-// console.log("Username:", username);
-// console.log("Password:", password);
-// console.log("Database:", dbname);
-// console.log('-----------------------------------------------------------------')
+// CORS configuration
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Add your Vercel frontend URL
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
+// MongoDB connection with proper error handling
+const connectDB = async (retries = 5) => {
+  try {
+    const username = process.env.MONGODB_USERNAME;
+    const password = process.env.MONGODB_PASSWORD;
+    const dbname = process.env.MONGODB_DBNAME;
 
-// Connect to MongoDB using mongoose
-mongoose.connect(
-  `mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/${dbname}?retryWrites=true&w=majority`
-);
-// Define the schema for user registration
+    if (!username || !password || !dbname) {
+      throw new Error("Missing MongoDB credentials in environment variables");
+    }
+
+    await mongoose.connect(
+      `mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/${dbname}?retryWrites=true&w=majority`,
+      {
+        // Remove deprecated options
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+      }
+    );
+    console.log("MongoDB connected successfully");
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    if (retries > 0) {
+      console.log(`Retrying connection... (${retries} attempts left)`);
+      setTimeout(() => connectDB(retries - 1), 5000);
+    } else {
+      console.error("Failed to connect to MongoDB after multiple attempts");
+      process.exit(1);
+    }
+  }
+};
+
+connectDB();
+
+// Enhanced user schema with password hashing
 const registrationSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  password: String,
-  number: String,
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  number: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
 });
 
-// Create a model based on the registration schema
+// Hash password before saving
+registrationSchema.pre('save', async function(next) {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+  next();
+});
+
 const Registration = mongoose.model("Registration", registrationSchema);
 
-// Configure Express to use bodyParser for parsing request bodies
+// Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
-// Middleware for serving static files from the 'public' directory
 app.use(express.static(path.join(__dirname, "public")));
 
-// Define routes
+// Basic input validation middleware
+const validateRegistrationInput = (req, res, next) => {
+  const { name, email, password, number } = req.body;
+  
+  if (!name || !email || !password || !number) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+  
+  if (password.length < 6) {
+    return res.status(400).json({ error: "Password must be at least 6 characters" });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: "Invalid email format" });
+  }
+
+  next();
+};
+
+// Routes
 // Home page route
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
@@ -62,57 +129,54 @@ app.get("/loginPage", (req, res) => {
   res.sendFile(__dirname + "/pages/login.html");
 });
 
-// Registration endpoint
-app.post("/register", async (req, res) => {
+// Enhanced registration endpoint
+app.post("/register", validateRegistrationInput, async (req, res) => {
   try {
     const { name, email, password, number } = req.body;
-
-    // Check if the user with the given email already exists
-    const existingUser = await Registration.findOne({ email });
-
-    if (!existingUser) {
-      // If user doesn't exist, create a new registration and save it
-      const registrationData = new Registration({
-        name,
-        email,
-        password,
-        number,
-      });
-      await registrationData.save();
-      console.log("Regstration successful");
-      return res.redirect("/success");
-    } else {
-      // If user already exists, redirect to an error page
-      console.log("User already exists");
-      return res.redirect("/error");
-    }
     
+    const existingUser = await Registration.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already registered" });
+    }
+
+    const registration = new Registration({ name, email, password, number });
+    await registration.save();
+
+    req.session.userId = registration._id; // Set session
+    res.redirect("/success");
   } catch (error) {
-    // Handle any errors during registration
-    console.log(error);
-    return res.redirect("/error");
+    console.error("Registration error:", error);
+    res.status(500).json({ error: "Registration failed" });
   }
 });
+
+// Enhanced login endpoint
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if the user with the given email and password exists
-    const existingUser = await Registration.findOne({ email, password });
-
-    if (existingUser) {
-      // If user exists, redirect to success page (you can customize this)
-      return res.redirect("/");
-    } else {
-      // If user doesn't exist or password is incorrect, redirect to error page
-      console.log("Invalid email or password");
-      return res.redirect("/error");
+    const user = await Registration.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
     }
+
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    req.session.userId = user._id; // Set session
+    res.redirect("/");
   } catch (error) {
-    // Handle any errors during login
-    console.log(error);
-    return res.redirect("/error");
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Login failed" });
   }
+});
+
+// Logout route
+app.get("/logout", (req, res) => {
+  req.session.destroy();
+  res.redirect("/");
 });
 
 // Success page route
@@ -135,7 +199,46 @@ app.get("/all-styles", (req, res) => {
   res.sendFile(__dirname + "/public/css/main.css");
 });
 
-// Start the server and listen on the specified port
-app.listen(port, () => {
-  console.log(`Server is running http://localhost:${port}`);
+// Add health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', dbConnection: mongoose.connection.readyState });
 });
+
+// Add error handling for database operations
+app.use(async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ error: 'Database connection not ready' });
+  }
+  next();
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(err.status || 500).json({
+    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+    status: err.status || 500
+  });
+});
+
+// Keep track of connection state
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected');
+  setTimeout(connectDB, 5000);
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB error:', err);
+});
+
+// Start server only after successful DB connection
+const startServer = () => {
+  app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+  }).on('error', (err) => {
+    console.error('Server error:', err);
+    process.exit(1);
+  });
+};
+
+connectDB().then(startServer);
