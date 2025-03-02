@@ -15,16 +15,21 @@ dotenv.config();
 // Define the port where the server will listen
 const port = process.env.PORT || 3000;
 
-// Revert session and CORS config to simpler version
+// Simplified session config for serverless
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  secret: process.env.SESSION_SECRET || 'fallback-secret-key',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+  cookie: {
+    secure: true,
+    httpOnly: true,
+    sameSite: 'none'
+  }
 }));
 
+// Simplified CORS for Vercel
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: true,
   credentials: true
 }));
 
@@ -43,44 +48,18 @@ app.use((req, res, next) => {
   next();
 });
 
-// MongoDB connection with proper error handling
-const connectDB = async (retries = 5) => {
+// Simplified MongoDB connection
+const connectDB = async () => {
   try {
-    const username = process.env.MONGODB_USERNAME;
-    const password = process.env.MONGODB_PASSWORD;
-    const dbname = process.env.MONGODB_DBNAME;
-
-    if (!username || !password || !dbname) {
-      throw new Error("Missing MongoDB credentials in environment variables");
-    }
-
-    const uri = `mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/${dbname}?retryWrites=true&w=majority`;
-    
-    console.log('Attempting MongoDB connection...');
-    
-    await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
-
-    console.log("MongoDB connected successfully");
-  } catch (error) {
-    console.error("MongoDB connection error:", {
-      message: error.message,
-      stack: error.stack,
-      code: error.code
-    });
-
-    if (retries > 0) {
-      console.log(`Retrying connection... (${retries} attempts left)`);
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      return connectDB(retries - 1);
-    }
-    throw error;
+    await mongoose.connect(process.env.MONGODB_URI || `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.j4relx6.mongodb.net/${process.env.MONGODB_DBNAME}?retryWrites=true&w=majority`);
+    console.log('MongoDB connected');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    // Don't exit process in serverless environment
+    return false;
   }
+  return true;
 };
-
-connectDB();
 
 // Enhanced user schema with password hashing
 const registrationSchema = new mongoose.Schema({
@@ -277,25 +256,20 @@ console.log('Environment check:', {
   hasSessionSecret: !!process.env.SESSION_SECRET
 });
 
-// Modified server start
-const startServer = async () => {
-  try {
+// Modified for serverless
+const handler = async (req, res) => {
+  if (!mongoose.connection.readyState) {
     await connectDB();
-    
-    const server = app.listen(port, () => {
-      console.log(`Server is running on http://localhost:${port}`);
-      console.log('Environment:', process.env.NODE_ENV);
-    });
-
-    server.on('error', (err) => {
-      console.error('Server error:', err);
-      process.exit(1);
-    });
-
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
   }
+  return app(req, res);
 };
 
-startServer();
+// Export handler for serverless
+module.exports = handler;
+
+// Only listen if not in Vercel
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
