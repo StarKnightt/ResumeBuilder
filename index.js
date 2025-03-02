@@ -16,12 +16,15 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.static('public'));
 
-// Simplified session for Vercel
+// Simplified session setup without connect-mongo
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 
+  }
 }));
 
 // MongoDB connection
