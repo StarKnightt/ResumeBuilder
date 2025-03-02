@@ -15,53 +15,23 @@ dotenv.config();
 // Define the port where the server will listen
 const port = process.env.PORT || 3000;
 
-// Simplified session config for serverless
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'fallback-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: true,
-    httpOnly: true,
-    sameSite: 'none'
-  }
-}));
+// Retrieve MongoDB connection details from environment variables
+const username = process.env.MONGODB_USERNAME || "";
+const password = process.env.MONGODB_PASSWORD || "";
+const dbname = process.env.MONGODB_DBNAME || "";
 
-// Simplified CORS for Vercel
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
+// console.log('-----------------------------------------------------------------')
+// console.log("Username:", username);
+// console.log("Password:", password);
+// console.log("Database:", dbname);
+// console.log('-----------------------------------------------------------------')
 
-// Add headers for Vercel
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Origin', req.headers.origin);
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  next();
-});
 
-// Add request logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
-
-// Simplified MongoDB connection
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI || `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.j4relx6.mongodb.net/${process.env.MONGODB_DBNAME}?retryWrites=true&w=majority`);
-    console.log('MongoDB connected');
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
-    // Don't exit process in serverless environment
-    return false;
-  }
-  return true;
-};
-
-// Enhanced user schema with password hashing
+// Connect to MongoDB using mongoose
+mongoose.connect(
+  `mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/${dbname}?retryWrites=true&w=majority`
+);
+// Define the schema for user registration
 const registrationSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -197,79 +167,7 @@ app.get("/all-styles", (req, res) => {
   res.sendFile(__dirname + "/public/css/main.css");
 });
 
-// Add health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', dbConnection: mongoose.connection.readyState });
+// Start the server and listen on the specified port
+app.listen(port, () => {
+  console.log(`Server is running http://localhost:${port}`);
 });
-
-// Add error handling for database operations
-app.use(async (req, res, next) => {
-  if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({ error: 'Database connection not ready' });
-  }
-  next();
-});
-
-// Improved error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error details:', {
-    message: err.message,
-    stack: err.stack,
-    path: req.path,
-    body: req.body,
-    query: req.query
-  });
-
-  // Send detailed error in development, generic in production
-  if (process.env.NODE_ENV === 'development') {
-    res.status(err.status || 500).json({
-      error: err.message,
-      stack: err.stack,
-      status: err.status || 500
-    });
-  } else {
-    res.status(err.status || 500).json({
-      error: 'Internal server error',
-      status: err.status || 500
-    });
-  }
-});
-
-// Keep track of connection state
-mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB disconnected');
-  setTimeout(connectDB, 5000);
-});
-
-mongoose.connection.on('error', (err) => {
-  console.error('MongoDB error:', err);
-});
-
-// Ensure environment variables are loaded
-console.log('Environment check:', {
-  nodeEnv: process.env.NODE_ENV,
-  port: process.env.PORT,
-  frontendUrl: process.env.FRONTEND_URL,
-  dbName: process.env.MONGODB_DBNAME,
-  hasUsername: !!process.env.MONGODB_USERNAME,
-  hasPassword: !!process.env.MONGODB_PASSWORD,
-  hasSessionSecret: !!process.env.SESSION_SECRET
-});
-
-// Modified for serverless
-const handler = async (req, res) => {
-  if (!mongoose.connection.readyState) {
-    await connectDB();
-  }
-  return app(req, res);
-};
-
-// Export handler for serverless
-module.exports = handler;
-
-// Only listen if not in Vercel
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-  });
-}
