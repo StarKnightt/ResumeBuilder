@@ -124,23 +124,24 @@
         <h2 class="fw-bold mb-5">Registration Form</h2>
         <form method="post" action="/register" style="text-align: left">
           <div class="form-outline mb-4">
-            <label class="form-label" for="form3Example1">Name</label>
-            <input type="text" id="form3Example1" name="name" class="form-control" placeholder="Enter your name" />
+            <label class="form-label" for="reg_name">Name</label>
+            <input type="text" id="reg_name" name="name" class="form-control" placeholder="Enter your name" />
           </div>
 
           <div class="form-outline mb-4">
-            <label class="form-label" for="form3Example3">Email address</label>
-            <input type="email" id="form3Example3" name="email" class="form-control" placeholder="Enter your email address" />
+            <label class="form-label" for="reg_email">Email address</label>
+            <input type="email" id="reg_email" name="email" class="form-control" placeholder="Enter your email address" />
           </div>
+          
           <div class="form-outline mb-4">
-            <label class="form-label" for="form3Example3">Phone Number</label>
-            <input type="tel" id="form3Example3" name="number" maxlength="10" class="form-control" placeholder="Enter your phone number" />
+            <label class="form-label" for="reg_phone">Phone Number</label>
+            <input type="tel" id="reg_phone" name="number" maxlength="10" class="form-control" placeholder="Enter your phone number" />
           </div>
 
           <div class="form-outline mb-4">
-            <label class="form-label" for="form3Example4">Password</label>
+            <label class="form-label" for="reg_password">Password</label>
             <div class="input-group">
-              <input type="password" id="form3Example4" name="password" class="form-control" placeholder="Enter a strong password" />
+              <input type="password" id="reg_password" name="password" class="form-control" placeholder="Enter a strong password" />
               <div class="input-group-text">
                 <input type="checkbox" id="password-toggle">
                 <label class="form-check-label" for="password-toggle">Show Password</label>
@@ -162,15 +163,11 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const passwordInput = document.getElementById("form3Example4");
+      const passwordInput = document.getElementById("reg_password");
       const passwordToggle = document.getElementById("password-toggle");
 
       passwordToggle.addEventListener("change", function () {
-        if (passwordToggle.checked) {
-          passwordInput.type = "text";
-        } else {
-          passwordInput.type = "password";
-        }
+        passwordInput.type = passwordToggle.checked ? "text" : "password";
       });
     });
   </script>

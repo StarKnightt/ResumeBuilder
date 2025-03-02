@@ -29,11 +29,18 @@ app.use(session({
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Add your Vercel frontend URL
+  origin: process.env.FRONTEND_URL || '*', // Allow all origins in development
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['set-cookie']
 }));
+
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
 
 // MongoDB connection with proper error handling
 const connectDB = async (retries = 5) => {
@@ -46,24 +53,29 @@ const connectDB = async (retries = 5) => {
       throw new Error("Missing MongoDB credentials in environment variables");
     }
 
-    await mongoose.connect(
-      `mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/${dbname}?retryWrites=true&w=majority`,
-      {
-        // Remove deprecated options
-        serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 45000,
-      }
-    );
+    const uri = `mongodb+srv://${username}:${password}@cluster0.j4relx6.mongodb.net/${dbname}?retryWrites=true&w=majority`;
+    
+    console.log('Attempting MongoDB connection...');
+    
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+
     console.log("MongoDB connected successfully");
   } catch (error) {
-    console.error("MongoDB connection error:", error);
+    console.error("MongoDB connection error:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
+
     if (retries > 0) {
       console.log(`Retrying connection... (${retries} attempts left)`);
-      setTimeout(() => connectDB(retries - 1), 5000);
-    } else {
-      console.error("Failed to connect to MongoDB after multiple attempts");
-      process.exit(1);
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      return connectDB(retries - 1);
     }
+    throw error;
   }
 };
 
@@ -91,7 +103,13 @@ const Registration = mongoose.model("Registration", registrationSchema);
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), {
+  setHeaders: (res, path, stat) => {
+    if (path.endsWith('.css')) {
+      res.set('Content-Type', 'text/css');
+    }
+  }
+}));
 
 // Basic input validation middleware
 const validateRegistrationInput = (req, res, next) => {
@@ -212,13 +230,29 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// Error handling middleware
+// Improved error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
-    status: err.status || 500
+  console.error('Error details:', {
+    message: err.message,
+    stack: err.stack,
+    path: req.path,
+    body: req.body,
+    query: req.query
   });
+
+  // Send detailed error in development, generic in production
+  if (process.env.NODE_ENV === 'development') {
+    res.status(err.status || 500).json({
+      error: err.message,
+      stack: err.stack,
+      status: err.status || 500
+    });
+  } else {
+    res.status(err.status || 500).json({
+      error: 'Internal server error',
+      status: err.status || 500
+    });
+  }
 });
 
 // Keep track of connection state
@@ -231,14 +265,36 @@ mongoose.connection.on('error', (err) => {
   console.error('MongoDB error:', err);
 });
 
-// Start server only after successful DB connection
-const startServer = () => {
-  app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-  }).on('error', (err) => {
-    console.error('Server error:', err);
+// Ensure environment variables are loaded
+console.log('Environment check:', {
+  nodeEnv: process.env.NODE_ENV,
+  port: process.env.PORT,
+  frontendUrl: process.env.FRONTEND_URL,
+  dbName: process.env.MONGODB_DBNAME,
+  hasUsername: !!process.env.MONGODB_USERNAME,
+  hasPassword: !!process.env.MONGODB_PASSWORD,
+  hasSessionSecret: !!process.env.SESSION_SECRET
+});
+
+// Modified server start
+const startServer = async () => {
+  try {
+    await connectDB();
+    
+    const server = app.listen(port, () => {
+      console.log(`Server is running on http://localhost:${port}`);
+      console.log('Environment:', process.env.NODE_ENV);
+    });
+
+    server.on('error', (err) => {
+      console.error('Server error:', err);
+      process.exit(1);
+    });
+
+  } catch (error) {
+    console.error('Failed to start server:', error);
     process.exit(1);
-  });
+  }
 };
 
-connectDB().then(startServer);
+startServer();
