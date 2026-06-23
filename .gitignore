@@ -1,3 +1,8 @@
 node_modules/
+
+# Environment files (never commit real secrets)
 .env
+.env.*
+!.env.demo
+
 .vercel
